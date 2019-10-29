@@ -2,12 +2,15 @@
 #include "I2C.h"
 #include <stdio.h>
 
+// Globals used in these functions
 sbit SDA = P1^0;
 sbit SCL = P1^1;
 
 uint8_t Ack_Check(void)
 {
+    //variable to hold the ack/nack
 	bit response_bit;
+
 	I2C_clock_delay(Continue);
 	SCL = 0;
 	SDA = 1;
@@ -22,30 +25,32 @@ uint8_t Ack_Check(void)
 	}
 	else
 	{
-		printf("Received Nack\r\n");
+		printf("Received Nack...\r\n");
 		return NACK;
 	}
 }
 
 uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, uint8_t num_bytes, uint8_t * store_data_arr)
 {
-	uint8_t send_val = 0;
+	uint8_t send_val = 0; // byte to send
 	uint8_t index = 0;
 	uint8_t num_bits = 0;
-	uint8_t recv_value = 0;
+	uint8_t recv_value = 0; // byte that is received
 	bit sent_bit = 0;
-	uint8_t return_value = no_errors;
+	uint8_t return_value = no_errors; // return value with error code
 	bit send_bit = 0;
 
 	SDA = 1;
 	SCL = 1;
 
+	// FIXME: Need to add internal address write
 	if((SCL==1)&&(SDA==1))
 	{
 		I2C_clock_start();
-		send_val = device_addr << 1;
-		send_val |= 0x01; // Set R/W bit
-		// Send Start
+		send_val = device_addr << 1; // 7 bit device address
+		send_val |= 0x01; // Set R/W bit, 1 = Read
+
+		// Start condition
 		SDA = 0;
 		index = 0;
 		
@@ -70,21 +75,23 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 			}
 		}while((num_bits!=0)&&(return_value==no_errors));
 		
-		//Wait for ACK/NACK
+		// Wait for ACK/NACK
 		if(Ack_check() != ACK)
 		{
 			return ack_error;
 		}
-		// read from address
+		// Read num_bytes from address
+		// Outer while loop is for each byte
 		while((num_bytes>0)&&(return_value == no_errors))
 		{
+		    // Do-while loop is for each bit
 			num_bits = 8;
 			do
 			{
 				I2C_clock_delay(Continue);
 				SCL=0;
 				num_bits--;
-				SDA = 1; // Set input to be 1
+				SDA = 1;
 				recv_value = recv_value << 1;
 				I2C_clock_delay(Continue);
 				SCL=1;
@@ -92,9 +99,11 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 				sent_bit = SDA;
 				recv_value |= sent_bit;
 			}while(num_bits!=0);
+			// Store the byte in the array buffer
 			*(store_data_arr+index) = recv_value;
 			index++;
 			num_bytes--;
+			// Set Ack/Nack
 			if(num_bytes == 0)
 			{
 				send_bit=1;
@@ -123,7 +132,6 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 			SDA = 1;
 		}	
 	}
-	printf("I made it here!");
 	return return_value;
 }
 
@@ -160,39 +168,39 @@ void I2C_clock_start(void)
 
 uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, uint8_t num_bytes, uint8_t * send_data_arr)
 {
-	uint8_t send_val = 0;
+	uint8_t send_val = 0; // byte to send
 	uint8_t index = 0;
 	uint8_t num_bits = 0;
-	uint8_t recv_value = 0;
+	uint8_t recv_value = 0; // byte to receive
 	bit sent_bit = 0;
-	uint8_t return_value = no_errors;
+	uint8_t return_value = no_errors; // return value with error code
 	bit send_bit = 0;
 
-	return_value = no_errors;
 	SDA = 1;
 	SCL = 1;
 	if((SCL==1)&&(SDA==1))
 	{
 		I2C_clock_start();
-		send_val = device_addr<<1;
-		//leaves LSB as a 0 for write
-		
-		//send start
+		send_val = device_addr<<1; // 7 bit device addr with 0 LSB for write
+
+		// Start Condition
 		SDA = 0;
 		index = 0;
 		num_bits = 8;
-		//Send Device Address
+
+		// Send Device Address
 		do
 		{
 			I2C_clock_delay(Continue);
 			SCL = 0;
 			num_bits--;
-			send_bit = ((send_val>>num_bits)&0x01);
-			SDA = send_bit;
+			send_bit = ((send_val>>num_bits)&0x01); // Shift down and mask off the upper 7 bits
+			SDA = send_bit; // Send a single bit
 			I2C_clock_delay(Continue);
 			SCL=1;
 			while(SCL!=1);
 			sent_bit = SDA;
+
 			//Collision Checking
 			if(sent_bit!=send_bit)
 			{
@@ -237,7 +245,6 @@ uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, u
 			}
 		}
 
-
 		//Data Send, ACK Check Cycle
 		while((num_bytes > 0)&&(return_value == no_errors))
 		{
@@ -248,6 +255,7 @@ uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, u
 			{
 				I2C_clock_delay(Continue);
 				SCL = 0;
+				num_bits--;
 				send_bit = ((send_val>>num_bits)&0x01);
 				SDA = send_bit;
 				I2C_clock_delay(Continue);
@@ -272,8 +280,6 @@ uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, u
 			}
 
 		}
-
-
 	}
 	// stop condition
 	if(return_value!=bus_busy_error)
