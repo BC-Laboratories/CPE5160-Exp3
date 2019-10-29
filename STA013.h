@@ -11,6 +11,7 @@
 #define timeout_val (1/(2*I2C_freq))
 // error values
 #define no_errors 0x00
+#define STA013_device_addr 0x43
 
 /* Desc:
  *
