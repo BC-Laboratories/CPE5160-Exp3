@@ -1,0 +1,104 @@
+C51 COMPILER V6.02  LCD_HARDWARE_FUNCTIONS                                                 10/28/2019 19:29:58 PAGE 1   
+
+
+C51 COMPILER V6.02, COMPILATION OF MODULE LCD_HARDWARE_FUNCTIONS
+OBJECT MODULE PLACED IN .\LCD_hardware_functions.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE .\LCD_hardware_functions.c DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include "main.h"
+   2          #include "LCD_hardware_functions.h"
+   3          #include "PORT.H"
+   4          
+   5          
+   6          /****** Private Functions  ******/
+   7          
+   8          void Output_LCD_data(uint8_t Port_Data);
+   9          void Clear_LCD_bit(uint8_t Bit_Data);
+  10          void Set_LCD_bit(uint8_t Bit_Data);
+  11          
+  12          
+  13          /***********************************************************************
+  14          DESC:    Writes data to the LCD with proper order for RS and E
+  15          INPUT: Uint8 for RS and Data to be written
+  16                 RS=0 instruction, RS=1 data
+  17          RETURNS: Nothing
+  18          CAUTION: None
+  19          ************************************************************************/
+  20          void LCD_Write(uint8_t RegSelect, uint8_t LCD_Data)
+  21          {
+  22   1        if(RegSelect==0)     // Set or Clear RS before E is Set
+  23   1        {
+  24   2      	Clear_LCD_bit(RS_bit);
+  25   2        }
+  26   1        else
+  27   1        {
+  28   2          Set_LCD_bit(RS_bit);
+  29   2        }
+  30   1        Set_LCD_bit(E_bit);  // Set Enable before data written
+  31   1        Output_LCD_data(LCD_Data);         
+  32   1        Clear_LCD_bit(E_bit);   
+  33   1        Output_LCD_data(0xFF);
+  34   1        Set_LCD_bit(RS_bit);
+  35   1      }
+  36          
+  37          
+  38          /*********************************************************************
+  39          *    Port Output Functions
+  40          ********************************************************************/
+  41          
+  42          /***********************************************************************
+  43          DESC:  Writes the value passed as a parameter to the LCD data port
+  44          INPUT: uint8_t value to be written to a port
+  45          RETURNS: Nothing
+  46          CAUTION: 
+  47          ************************************************************************/
+  48          void Output_LCD_data(uint8_t Port_Data)
+  49          {
+  50   1        P0=Port_Data;
+  51   1      }
+  52          
+  53          /***********************************************************************
+  54          DESC:  Clears the specified bits on a specified port for LCD signals
+  55          INPUT: 8-bit pattern with '1' bits for the bits to be cleared
+C51 COMPILER V6.02  LCD_HARDWARE_FUNCTIONS                                                 10/28/2019 19:29:58 PAGE 2   
+
+  56          RETURNS: Nothing
+  57          CAUTION: 
+  58          ************************************************************************/
+  59          
+  60          
+  61          void Clear_LCD_bit(uint8_t Bit_Data)
+  62          {
+  63   1        P3&=(~Bit_Data);
+  64   1      }
+  65          
+  66          /***********************************************************************
+  67          DESC:  Set the specified bits on a specified port for LCD signals
+  68          INPUT: 8-bit pattern with '1' bits for the bits to be set
+  69          RETURNS: Nothing
+  70          CAUTION: 
+  71          ************************************************************************/
+  72          
+  73          
+  74          void Set_LCD_bit(uint8_t Bit_Data)
+  75          {
+  76   1        P3|=Bit_Data;
+  77   1      }
+  78          
+  79          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     54    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

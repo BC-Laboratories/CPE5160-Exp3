@@ -1,0 +1,48 @@
+C51 COMPILER V6.02  STA013                                                                 10/28/2019 19:30:00 PAGE 1   
+
+
+C51 COMPILER V6.02, COMPILATION OF MODULE STA013
+OBJECT MODULE PLACED IN .\STA013.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE .\STA013.c DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include "Main.h"
+   2          #include "STA013.h"
+   3          #include "I2C.h"
+   4          #include <stdio.h>
+   5          
+   6          uint8_t STA013_init(void)
+   7          {
+   8   1      
+   9   1      	uint8_t i = timeout_val;
+  10   1      	uint8_t send_array[3] = {0x03,0x02,0x01};
+  11   1      	uint8_t array_name[3];
+  12   1      	uint8_t return_value;
+  13   1      
+  14   1      	do
+  15   1      	{
+  16   2      		//I2C_write(0x43, 0x01, 8, 3 , send_array);
+  17   2      		return_value = I2C_read(0x43,0,0,3,array_name);
+  18   2      		i--;
+  19   2      	}while((return_value!=no_errors)&&(i!=0));
+  20   1      	printf("Received Value = %2.2bX\n\r",array_name[0]);
+  21   1      	printf("Received Value = %2.2bX\n\r",array_name[1]);
+  22   1      	printf("Received Value = %2.2bX\n\r",array_name[2]);
+  23   1      	return return_value;
+  24   1      
+  25   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     98    ----
+   CONSTANT SIZE    =     29    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       8
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

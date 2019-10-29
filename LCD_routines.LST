@@ -1,0 +1,84 @@
+C51 COMPILER V6.02  LCD_ROUTINES                                                           10/28/2019 19:29:58 PAGE 1   
+
+
+C51 COMPILER V6.02, COMPILATION OF MODULE LCD_ROUTINES
+OBJECT MODULE PLACED IN .\LCD_routines.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE .\LCD_routines.c DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include "main.h"
+   2          #include "LCD_Routines.h"
+   3          #include "LCD_hardware_functions.h"
+   4          #include "Timer0_hardware_delay_1ms.h"
+   5          
+   6          
+   7          
+   8          /***********************************************************************
+   9          DESC:    Initializes LCD
+  10          INPUT: Nothing
+  11          RETURNS: Nothing
+  12          CAUTION: Uses timer 0 in delay functions
+  13          ************************************************************************/
+  14          void LCD_Init(void)
+  15          {
+  16   1        LCD_Write(COMMAND,function_set_8bit|two_line|set_5x8);
+  17   1        Timer0_DELAY_1ms(1);
+  18   1        LCD_Write(COMMAND,display_control|display_on|cursor_off|blink_off);   // Display on, Cursor On and Not b
+             -linking
+  19   1        Timer0_DELAY_1ms(1);
+  20   1        LCD_Write(COMMAND,clear_display);   // Clear Display
+  21   1        Timer0_DELAY_1ms(2);         // Must wait until this is complete
+  22   1        LCD_Write(COMMAND,entry_mode|shift_right|cursor);   // DDRAM address increments with no scrolling
+  23   1        Timer0_DELAY_1ms(1);
+  24   1      }
+  25          
+  26          
+  27          
+  28          void LCD_print(uint8_t address, uint8_t num_bytes, uint8_t *array_name_p)
+  29          {
+  30   1         uint8_t index,character;
+  31   1         if(address!=no_addr_change)
+  32   1         {
+  33   2           LCD_Write(COMMAND,set_ddram_addr|address);
+  34   2           Timer0_DELAY_1ms(1);
+  35   2         }
+  36   1         if(num_bytes==0)
+  37   1         {
+  38   2            index=0;
+  39   2            character=*(array_name_p+index);
+  40   2            while(character!=0)
+  41   2            {
+  42   3               LCD_Write(DDRAM,character);
+  43   3               Timer0_DELAY_1ms(1);
+  44   3               index++;
+  45   3               character=*(array_name_p+index);
+  46   3            }
+  47   2          }
+  48   1          else
+  49   1          {
+  50   2             for(index=0;index<num_bytes;index++)
+  51   2             {
+  52   3                character=*(array_name_p+index);
+  53   3                LCD_Write(DDRAM,character);
+  54   3                Timer0_DELAY_1ms(1);
+C51 COMPILER V6.02  LCD_ROUTINES                                                           10/28/2019 19:29:58 PAGE 2   
+
+  55   3             }
+  56   2          }     
+  57   1      }	
+  58          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    189    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,328 @@
+C51 COMPILER V6.02  I2C                                                                    10/28/2019 19:30:00 PAGE 1   
+
+
+C51 COMPILER V6.02, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN .\I2C.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE .\I2C.c DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include "Main.h"
+   2          #include "I2C.h"
+   3          #include <stdio.h>
+   4          
+   5          sbit SDA = P1^0;
+   6          sbit SCL = P1^1;
+   7          
+   8          uint8_t Ack_Check(void)
+   9          {
+  10   1      	bit response_bit;
+  11   1      	I2C_clock_delay(Continue);
+  12   1      	SCL = 0;
+  13   1      	SDA = 1;
+  14   1      	I2C_clock_delay(Continue);
+  15   1      	SCL = 1;
+  16   1      	while(SCL != 1);
+  17   1      	response_bit = SDA;
+  18   1      	if(response_bit != 1)
+  19   1      	{
+  20   2      		printf("Received Ack...\r\n");
+  21   2      		return ACK;
+  22   2      	}
+  23   1      	else
+  24   1      	{
+  25   2      		printf("Received Nack\r\n");
+  26   2      		return NACK;
+  27   2      	}
+  28   1      }
+  29          
+  30          uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, uint8_t num_bytes, uint8_t
+             - * store_data_arr)
+  31          {
+  32   1      	uint8_t send_val = 0;
+  33   1      	uint8_t index = 0;
+  34   1      	uint8_t num_bits = 0;
+  35   1      	uint8_t recv_value = 0;
+  36   1      	bit sent_bit = 0;
+  37   1      	uint8_t return_value = no_errors;
+  38   1      	bit send_bit = 0;
+  39   1      
+  40   1      	SDA = 1;
+  41   1      	SCL = 1;
+  42   1      
+  43   1      	if((SCL==1)&&(SDA==1))
+  44   1      	{
+  45   2      		I2C_clock_start();
+  46   2      		send_val = device_addr << 1;
+  47   2      		send_val |= 0x01; // Set R/W bit
+  48   2      		// Send Start
+  49   2      		SDA = 0;
+  50   2      		index = 0;
+  51   2      		
+  52   2      		//send device addr
+  53   2      		printf("Sending device addr.\r\n");
+  54   2      		num_bits = 8;
+C51 COMPILER V6.02  I2C                                                                    10/28/2019 19:30:00 PAGE 2   
+
+  55   2      		do
+  56   2      		{
+  57   3      			I2C_clock_delay(Continue);
+  58   3      			SCL = 0;
+  59   3      			num_bits--;
+  60   3      			send_bit = ((send_val>>num_bits)&0x01);
+  61   3      			SDA = send_bit;
+  62   3      			I2C_clock_delay(Continue);
+  63   3      			SCL=1;
+  64   3      			while(SCL!=1);
+  65   3      			// collision detection
+  66   3      			sent_bit = SDA;
+  67   3      			if(sent_bit!=send_bit)
+  68   3      			{
+  69   4      				return_value=bus_busy_error;
+  70   4      			}
+  71   3      		}while((num_bits!=0)&&(return_value==no_errors));
+  72   2      		
+  73   2      		//Wait for ACK/NACK
+  74   2      		if(Ack_check() != ACK)
+  75   2      		{
+  76   3      			return ack_error;
+  77   3      		}
+  78   2      		// read from address
+  79   2      		while((num_bytes>0)&&(return_value == no_errors))
+  80   2      		{
+  81   3      			num_bits = 8;
+  82   3      			do
+  83   3      			{
+  84   4      				I2C_clock_delay(Continue);
+  85   4      				SCL=0;
+  86   4      				num_bits--;
+  87   4      				SDA = 1; // Set input to be 1
+  88   4      				recv_value = recv_value << 1;
+  89   4      				I2C_clock_delay(Continue);
+  90   4      				SCL=1;
+  91   4      				while(SCL!=1);
+  92   4      				sent_bit = SDA;
+  93   4      				recv_value |= sent_bit;
+  94   4      			}while(num_bits!=0);
+  95   3      			*(store_data_arr+index) = recv_value;
+  96   3      			index++;
+  97   3      			num_bytes--;
+  98   3      			if(num_bytes == 0)
+  99   3      			{
+ 100   4      				send_bit=1;
+ 101   4      			}
+ 102   3      			else
+ 103   3      			{
+ 104   4      				send_bit=0;
+ 105   4      			}
+ 106   3      			I2C_clock_delay(Continue);
+ 107   3      			SCL=0;
+ 108   3      			SDA=send_bit;
+ 109   3      			I2C_clock_delay(Continue);
+ 110   3      			SCL=1;
+ 111   3      			while(SCL!=1);
+ 112   3      		}
+ 113   2      		// stop condition
+ 114   2      		if(return_value!=bus_busy_error)
+ 115   2      		{
+ 116   3      			I2C_clock_delay(Continue);
+C51 COMPILER V6.02  I2C                                                                    10/28/2019 19:30:00 PAGE 3   
+
+ 117   3      			SCL=0;
+ 118   3      			SDA=0;
+ 119   3      			I2C_clock_delay(Continue);
+ 120   3      			SCL=1;
+ 121   3      			while(SCL!=1);
+ 122   3      			I2C_clock_delay(Stop);
+ 123   3      			SDA = 1;
+ 124   3      		}	
+ 125   2      	}
+ 126   1      	printf("I made it here!");
+ 127   1      	return return_value;
+ 128   1      }
+*** WARNING C280 IN LINE 30 OF .\I2C.C: 'internal_addr': unreferenced local variable
+*** WARNING C280 IN LINE 30 OF .\I2C.C: 'int_size': unreferenced local variable
+ 129          
+ 130          void I2C_clock_delay(uint8_t control)
+ 131          {
+ 132   1      	if(TR1==1)
+ 133   1      	{
+ 134   2      		while(TF1==0);
+ 135   2      	}
+ 136   1      	TR1=0; 
+ 137   1      	if(control==Continue)
+ 138   1      	{
+ 139   2      		TH1=I2C_RELOAD_H;
+ 140   2      		TL1=I2C_RELOAD_L;
+ 141   2      		TF1=0;
+ 142   2      		TR1=1;
+ 143   2      	}
+ 144   1      }
+ 145          
+ 146          
+ 147          void I2C_clock_start(void)
+ 148          {
+ 149   1      	TMOD&=0x0F;
+ 150   1      	TMOD|=0x10;
+ 151   1      
+ 152   1      	ET1=0;
+ 153   1      
+ 154   1      	TH1 = I2C_RELOAD_H;
+ 155   1      	TL1 = I2C_RELOAD_L;
+ 156   1      	TF1 = 0;
+ 157   1      	TR1 = 1;
+ 158   1      }
+ 159          
+ 160          
+ 161          uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, uint8_t num_bytes, uint8_t 
+             -* send_data_arr)
+ 162          {
+ 163   1      	uint8_t send_val = 0;
+ 164   1      	uint8_t index = 0;
+ 165   1      	uint8_t num_bits = 0;
+ 166   1      	uint8_t recv_value = 0;
+ 167   1      	bit sent_bit = 0;
+ 168   1      	uint8_t return_value = no_errors;
+ 169   1      	bit send_bit = 0;
+ 170   1      
+ 171   1      	return_value = no_errors;
+ 172   1      	SDA = 1;
+ 173   1      	SCL = 1;
+ 174   1      	if((SCL==1)&&(SDA==1))
+ 175   1      	{
+C51 COMPILER V6.02  I2C                                                                    10/28/2019 19:30:00 PAGE 4   
+
+ 176   2      		I2C_clock_start();
+ 177   2      		send_val = device_addr<<1;
+ 178   2      		//leaves LSB as a 0 for write
+ 179   2      		
+ 180   2      		//send start
+ 181   2      		SDA = 0;
+ 182   2      		index = 0;
+ 183   2      		num_bits = 8;
+ 184   2      		//Send Device Address
+ 185   2      		do
+ 186   2      		{
+ 187   3      			I2C_clock_delay(Continue);
+ 188   3      			SCL = 0;
+ 189   3      			num_bits--;
+ 190   3      			send_bit = ((send_val>>num_bits)&0x01);
+ 191   3      			SDA = send_bit;
+ 192   3      			I2C_clock_delay(Continue);
+ 193   3      			SCL=1;
+ 194   3      			while(SCL!=1);
+ 195   3      			sent_bit = SDA;
+ 196   3      			//Collision Checking
+ 197   3      			if(sent_bit!=send_bit)
+ 198   3      			{
+ 199   4      				return_value=bus_busy_error;
+ 200   4      			}
+ 201   3      		}while((num_bits!=0)&&(return_value==no_errors));
+ 202   2      		
+ 203   2      		//Wait for ACK/NACK
+ 204   2      		if(Ack_check() != ACK)
+ 205   2      		{
+ 206   3      			return ack_error;
+ 207   3      		}
+ 208   2      		
+ 209   2      		//Internal Address Check
+ 210   2      		if (int_addr_sz > 0)
+ 211   2      		{
+ 212   3      			num_bits = 8;
+ 213   3      			send_val = int_addr;
+ 214   3      			//Send Internal Address
+ 215   3      			do
+ 216   3      			{
+ 217   4      				I2C_clock_delay(Continue);
+ 218   4      				SCL = 0;
+ 219   4      				num_bits--;
+ 220   4      				send_bit = ((send_val>>num_bits)&0x01);
+ 221   4      				SDA = send_bit;
+ 222   4      				I2C_clock_delay(Continue);
+ 223   4      				SCL=1;
+ 224   4      				while(SCL!=1);
+ 225   4      				sent_bit = SDA;
+ 226   4      				//Collision Checking
+ 227   4      				if(sent_bit!=send_bit)
+ 228   4      				{
+ 229   5      					return_value=bus_busy_error;
+ 230   5      				}
+ 231   4      			}while((num_bits!=0)&&(return_value==no_errors));
+ 232   3      		
+ 233   3      			//Wait for ACK/NACK
+ 234   3      			if(Ack_check() != ACK)
+ 235   3      			{
+ 236   4      				return ack_error;
+ 237   4      			}
+C51 COMPILER V6.02  I2C                                                                    10/28/2019 19:30:00 PAGE 5   
+
+ 238   3      		}
+ 239   2      
+ 240   2      
+ 241   2      		//Data Send, ACK Check Cycle
+ 242   2      		while((num_bytes > 0)&&(return_value == no_errors))
+ 243   2      		{
+ 244   3      
+ 245   3      			num_bits = 8;
+ 246   3      			send_val = *(send_data_arr+index);
+ 247   3      			do
+ 248   3      			{
+ 249   4      				I2C_clock_delay(Continue);
+ 250   4      				SCL = 0;
+ 251   4      				send_bit = ((send_val>>num_bits)&0x01);
+ 252   4      				SDA = send_bit;
+ 253   4      				I2C_clock_delay(Continue);
+ 254   4      				SCL=1;
+ 255   4      				while(SCL!=1);
+ 256   4      
+ 257   4      				// collision detection
+ 258   4      				sent_bit = SDA;
+ 259   4      				if(sent_bit!=send_bit)
+ 260   4      				{
+ 261   5      					return_value=bus_busy_error;
+ 262   5      				}
+ 263   4      			}while((num_bits!=0)&&(return_value==no_errors));
+ 264   3      			
+ 265   3      			num_bytes--;
+ 266   3      			index++;
+ 267   3      			
+ 268   3      			//Wait for ACK/NACK
+ 269   3      			if(Ack_check() != ACK)
+ 270   3      			{
+ 271   4      				return ack_error;
+ 272   4      			}
+ 273   3      
+ 274   3      		}
+ 275   2      
+ 276   2      
+ 277   2      	}
+ 278   1      	// stop condition
+ 279   1      	if(return_value!=bus_busy_error)
+ 280   1      	{
+ 281   2      		I2C_clock_delay(Continue);
+ 282   2      		SCL=0;
+ 283   2      		SDA=0;
+ 284   2      		I2C_clock_delay(Continue);
+ 285   2      		SCL=1;
+ 286   2      		while(SCL!=1);
+ 287   2      		I2C_clock_delay(Stop);
+ 288   2      		SDA = 1;
+ 289   2      	}
+ 290   1      	return return_value;
+ 291   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    688    ----
+   CONSTANT SIZE    =     73    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      30
+C51 COMPILER V6.02  I2C                                                                    10/28/2019 19:30:00 PAGE 6   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       5
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

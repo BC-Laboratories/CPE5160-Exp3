@@ -1,0 +1,12 @@
+"exp_3_fall2019.obj",
+"LCD_hardware_functions.obj",
+"LCD_routines.obj",
+"LED_Outputs.obj",
+"print_bytes.obj",
+"Timer0_hardware_delay_1ms.obj",
+"UART.obj",
+"config.obj",
+"I2C.obj",
+"STA013.obj" 
+TO "lab3" 
+RAMSIZE(256) 

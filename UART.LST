@@ -1,0 +1,101 @@
+C51 COMPILER V6.02  UART                                                                   10/28/2019 19:29:59 PAGE 1   
+
+
+C51 COMPILER V6.02, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\UART.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE .\UART.c DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include <stdio.h>
+   2          #include "main.h"
+   3          #include "UART.h"
+   4          
+   5          
+   6          /***********************************************************************
+   7          DESC:    Initializes UART for mode 1 to specified Baud Rate
+   8          INPUT: Nothing
+   9          RETURNS: Nothing
+  10          CAUTION: Uses Baudrate Generator instead of timer 1.  SPD should be set for best results.
+  11          ************************************************************************/
+  12          void uart_init(uint16_t BAUD_RATE)
+  13          {
+  14   1        
+  15   1        // configure UART
+  16   1        // set or clear SMOD1 and clear SMOD0
+  17   1        PCON &= 0x3F;  // Clears both SMOD0 and SMOD1
+  18   1        PCON |= (SMOD1 << 7); // Sets SMOD1 to the defined value
+  19   1         
+  20   1        // serial interrupt is disabled
+  21   1        ES=0;  
+  22   1      
+  23   1        // UART set to MODE1, Receive is enabled and Transmit Flag is set to indicate Transmit Buffer is empty
+  24   1        SCON = UART_MODE1|RECEIVE_ENABLE|TRANSMIT_FLAG_SET;
+  25   1      
+  26   1        // Initialize Baud Rate Generator
+  27   1        BDRCON=0;   //Stops and disables Baud Rate Gen.
+  28   1        // BRL = BAUD_RATE_RELOAD   // Use this line for compile time baud rate set up.
+  29   1        BRL= (uint8_t)(256-(((1+(5*SPD))*(1+(1*SMOD1))*OSC_FREQ)+(16UL*OSC_PER_INST*BAUD_RATE))/(32UL*OSC_PER_IN
+             -ST*BAUD_RATE));
+  30   1        BDRCON= (0x1C | (SPD << 1));  // Enables Baud Rate Gen. for RxD and TxD
+  31   1      
+  32   1        
+  33   1      
+  34   1      } // uart_init
+  35          
+  36          
+  37          /***********************************************************************
+  38          DESC:    Sends one character through the UART
+  39          INPUT:   Character to send
+  40          RETURNS: Character sent
+  41          CAUTION: TI must be set during the initialization
+  42          ************************************************************************/
+  43          
+  44          uint8_t UART_Transmit(uint8_t send_value)
+  45          {
+  46   1         while(TI==0);
+  47   1         SBUF=send_value;
+  48   1         TI=0;
+  49   1         return send_value;
+  50   1      }
+  51             
+  52          
+  53          
+  54          
+C51 COMPILER V6.02  UART                                                                   10/28/2019 19:29:59 PAGE 2   
+
+  55          
+  56          
+  57          /***********************************************************************
+  58          DESC:    Waits for a value to be received through the UART and returns 
+  59                   the value.
+  60          INPUT: Nothing
+  61          RETURNS: Received value
+  62          CAUTION: Will stop program execution until a character is received
+  63          ************************************************************************/
+  64          
+  65          uint8_t UART_Receive(void)
+  66          {
+  67   1          while(RI==0);
+  68   1          RI=0;
+  69   1          return SBUF;
+  70   1      }
+  71          
+  72          
+  73          
+  74          
+  75          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    113    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
