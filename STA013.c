@@ -1,3 +1,7 @@
+/* Names: Tyler Andrews, Tyler Tetens, Brennan Campbell
+ * Experiment 3
+ */
+
 #include "Main.h"
 #include "STA013.h"
 #include "I2C.h"

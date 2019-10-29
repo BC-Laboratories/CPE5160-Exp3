@@ -1,3 +1,7 @@
+/* Names: Tyler Andrews, Tyler Tetens, Brennan Campbell
+ * Experiment 3
+ */
+
 #ifndef _STA013_H
 #define _STA013_H
 

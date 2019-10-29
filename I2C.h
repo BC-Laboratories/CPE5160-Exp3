@@ -1,3 +1,7 @@
+/* Names: Tyler Andrews, Tyler Tetens, Brennan Campbell
+ * Experiment 3
+ */
+
 #ifndef _I2C_H
 #define _I2C_H
 
