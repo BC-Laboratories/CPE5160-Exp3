@@ -17,4 +17,9 @@
  */
 uint8_t STA013_init(void);
 
+/* Desc:
+ *
+ */
+uint8_t STA013_config(uint8_t device_addr, uint8_t * config_array);
+
 #endif

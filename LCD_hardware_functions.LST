@@ -1,4 +1,4 @@
-C51 COMPILER V6.02  LCD_HARDWARE_FUNCTIONS                                                 10/28/2019 19:29:58 PAGE 1   
+C51 COMPILER V6.02  LCD_HARDWARE_FUNCTIONS                                                 10/29/2019 12:46:37 PAGE 1   
 
 
 C51 COMPILER V6.02, COMPILATION OF MODULE LCD_HARDWARE_FUNCTIONS
@@ -62,7 +62,7 @@ stmt level    source
   53          /***********************************************************************
   54          DESC:  Clears the specified bits on a specified port for LCD signals
   55          INPUT: 8-bit pattern with '1' bits for the bits to be cleared
-C51 COMPILER V6.02  LCD_HARDWARE_FUNCTIONS                                                 10/28/2019 19:29:58 PAGE 2   
+C51 COMPILER V6.02  LCD_HARDWARE_FUNCTIONS                                                 10/29/2019 12:46:37 PAGE 2   
 
   56          RETURNS: Nothing
   57          CAUTION: 
