@@ -11,15 +11,14 @@
 #define timeout_val (1/(2*I2C_freq))
 // error values
 #define no_errors 0x00
+// Address of the STA013
 #define STA013_device_addr 0x43
 
-/* Desc:
- *
+/* Desc: Calls STA013_config for each CONFIG file there is
  */
 uint8_t STA013_init(void);
 
-/* Desc:
- *
+/* Desc: Reads in the config.asm and writes it over I2C to the STA013
  */
 uint8_t STA013_config(uint8_t device_addr, uint8_t * config_array);
 

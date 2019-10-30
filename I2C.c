@@ -47,7 +47,6 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 	SDA = 1;
 	SCL = 1;
 
-	// FIXME: Need to add internal address write
 	if((SCL==1)&&(SDA==1))
 	{
 		I2C_clock_start();
@@ -78,12 +77,17 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 				return_value=bus_busy_error;
 			}
 		}while((num_bits!=0)&&(return_value==no_errors));
-		
 		// Wait for ACK/NACK
 		if(Ack_check() != ACK)
 		{
 			return ack_error;
 		}
+		// FIXME: Below may wrong
+		/*
+		if(int_size>0)
+        {
+            return_val=I2C_Write(device_addr,int_addr,int_addr_sz,0,rec_array);
+        }*/
 		// Read num_bytes from address
 		// Outer while loop is for each byte
 		while((num_bytes>0)&&(return_value == no_errors))
