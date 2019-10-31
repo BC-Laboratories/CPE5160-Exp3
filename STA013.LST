@@ -1,4 +1,4 @@
-C51 COMPILER V6.02  STA013                                                                 10/29/2019 12:46:40 PAGE 1   
+C51 COMPILER V6.02  STA013                                                                 10/30/2019 12:11:41 PAGE 1   
 
 
 C51 COMPILER V6.02, COMPILATION OF MODULE STA013
@@ -17,79 +17,70 @@ stmt level    source
    8          #include <stdio.h>
    9          #include "Timer0_hardware_delay_1ms.h"
   10          
-  11          
-  12          extern uint8_t code CONFIG;
-  13          extern uint8_t code CONFIG2;
-  14          
-  15          uint8_t STA013_init(void)
-  16          {
-  17   1      	uint8_t return_value;
-  18   1      
-  19   1      
-  20   1      	uint8_t i = timeout_val;
-  21   1      	uint8_t send_array[3] = {0x03,0x02,0x01};
-  22   1      	uint8_t array_name[3];
-  23   1      
-  24   1      	do
-  25   1      	{
-  26   2      		I2C_write(0x43, 0x01, 1, 0, send_array);
-  27   2      		return_value = I2C_read(0x43,0,0,3,array_name);
-  28   2      		i--;
-  29   2      	}while((return_value!=no_errors)&&(i!=0));
-  30   1      	printf("Received Value = %2.2bX\n\r",array_name[0]);
-  31   1      	return return_value;
-  32   1      
-  33   1      	//printf("Received Value = %2.2bX\n\r",array_name[1]);
-  34   1      	//printf("Received Value = %2.2bX\n\r",array_name[2]);
-  35   1      /*
-  36   1      	printf("--------------------Config 1 Go!!!!--------------------\r\n");
-  37   1      	STA013_config(0x43, &CONFIG);
-  38   1          Timer0_DELAY_1ms(1000);
-  39   1      	printf("--------------------Config 2 Go!!!!--------------------\r\n");
-  40   1          STA013_config(0x43, &CONFIG2);
-  41   1          Timer0_DELAY_1ms(1000);  
-  42   1      	printf("Finished Init...\r\n");
-  43   1      	return return_value;
-  44   1      	*/
-  45   1      
-  46   1      }
-  47          
-  48          
-  49          uint8_t STA013_config(uint8_t device_addr, uint8_t * config_array)
-  50          {
-  51   1          uint8_t send_array[1];
-  52   1      	uint8_t recv_array[1];
-  53   1          uint8_t internal_addr;
-  54   1      	uint8_t timeout;
-  55   1      	uint8_t status;
-C51 COMPILER V6.02  STA013                                                                 10/29/2019 12:46:40 PAGE 2   
+  11          extern uint8_t code CONFIG;
+  12          extern uint8_t code CONFIG2;
+  13          
+  14          uint8_t STA013_init(void)
+  15          {
+  16   1      	uint8_t return_value; // variable used for error status
+  17   1      	uint8_t index = timeout_val;
+  18   1      	uint8_t send_array[3];
+  19   1      	uint8_t recv_array[3];
+  20   1      
+  21   1      	do
+  22   1      	{
+  23   2      		I2C_write(STA013_device_addr, 0x01, 1, 0, send_array); // setting internal address to 0x01
+  24   2      		return_value = I2C_read(STA013_device_addr,0,0,1,recv_array);
+  25   2      		index--;
+  26   2      	}while((return_value!=no_errors)&&(index!=0));
+  27   1      	printf("Received Value = %2.2bX\n\r",recv_array[0]);
+  28   1      	return return_value;
+  29   1      
+  30   1      /* // Read and Send of each config file
+  31   1      	printf("--------------------Config 1 Go!!!!--------------------\r\n");
+  32   1      	STA013_config(0x43, &CONFIG);
+  33   1          Timer0_DELAY_1ms(1000);
+  34   1      	printf("--------------------Config 2 Go!!!!--------------------\r\n");
+  35   1          STA013_config(0x43, &CONFIG2);
+  36   1          Timer0_DELAY_1ms(1000);  
+  37   1      	printf("Finished Init...\r\n");
+  38   1      	return return_value;
+  39   1      	*/
+  40   1      }
+  41          
+  42          
+  43          uint8_t STA013_config(uint8_t device_addr, uint8_t * config_array)
+  44          {
+  45   1          uint8_t send_array[1];
+  46   1      	uint8_t recv_array[1];
+  47   1          uint8_t internal_addr; // address fro config file
+  48   1      	uint8_t timeout;
+  49   1      	uint8_t status; // variable to hold error
+  50   1          uint16_t index = 0;
+  51   1          
+  52   1          do 
+  53   1      	{
+  54   2              timeout = 50; // simple timeout
+  55   2              internal_addr = config_array[index];
+C51 COMPILER V6.02  STA013                                                                 10/30/2019 12:11:41 PAGE 2   
 
-  56   1          uint16_t i = 0;
-  57   1          
-  58   1          do 
-  59   1      	{
-  60   2              timeout = 50;
-  61   2              
-  62   2              internal_addr = config_array[i];
-  63   2              ++i;
-  64   2              
-  65   2              send_array[0] = config_array[i];
-  66   2              ++i;
-  67   2              
-  68   2              do 
-  69   2      		{
-  70   3                  status = I2C_write(device_addr, internal_addr, 1, 1, send_array);
-  71   3                  --timeout;
-  72   3              } while ((status != no_errors) && (timeout != 0));
-  73   2      		I2C_read(device_addr, internal_addr,1,1,recv_array);
-  74   2          } while ((internal_addr != 0xFF) && (timeout != 0));
-  75   1          return status;
-  76   1      }
+  56   2              ++index;
+  57   2              send_array[0] = config_array[index]; // data to set to address from config file
+  58   2              ++index;
+  59   2              do
+  60   2      		{
+  61   3                  status = I2C_write(device_addr, internal_addr, 1, 1, send_array);
+  62   3                  --timeout;
+  63   3              } while ((status != no_errors) && (timeout != 0));
+  64   2      		I2C_read(device_addr, internal_addr,1,1,recv_array);
+  65   2          } while ((internal_addr != 0xFF) && (timeout != 0)); // 0xFF is the end of the config file
+  66   1          return status;
+  67   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    243    ----
-   CONSTANT SIZE    =     29    ----
+   CODE SIZE        =    226    ----
+   CONSTANT SIZE    =     26    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----      19

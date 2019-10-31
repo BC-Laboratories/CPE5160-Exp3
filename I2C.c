@@ -16,12 +16,13 @@ uint8_t Ack_Check(void)
 	bit response_bit;
 
 	I2C_clock_delay(Continue);
-	SCL = 0;
-	SDA = 1;
+	SCL = 0; // Pull clock low to set new bit
+	SDA = 1; // Set bit high
 	I2C_clock_delay(Continue);
 	SCL = 1;
 	while(SCL != 1);
 	response_bit = SDA;
+	// Check for ack or nack
 	if(response_bit != 1)
 	{
 		printf("Received Ack...\r\n");
@@ -44,6 +45,15 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 	uint8_t return_value = no_errors; // return value with error code
 	bit send_bit = 0;
 
+	// Send an internal address if there is one
+	if(int_size>0)
+	{
+		printf("Sending an internal address for a read");
+		return_value = I2C_write(device_addr,internal_addr, int_size,0,0);
+		printf("Done sending an internal address for a read");
+	}
+
+	// Default both SDA and SCL to 1
 	SDA = 1;
 	SCL = 1;
 
@@ -63,12 +73,12 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 		do
 		{
 			I2C_clock_delay(Continue);
-			SCL = 0;
+			SCL = 0; // Pull the clock low before transitioning to new bit
 			num_bits--;
-			send_bit = ((send_val>>num_bits)&0x01);
+			send_bit = ((send_val>>num_bits)&0x01); // Shift down and mask off the upper 7 bits
 			SDA = send_bit;
 			I2C_clock_delay(Continue);
-			SCL=1;
+			SCL=1; // Pull the clock back high to sample
 			while(SCL!=1);
 			// collision detection
 			sent_bit = SDA;
@@ -82,12 +92,7 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 		{
 			return ack_error;
 		}
-		// FIXME: Below may wrong
-		/*
-		if(int_size>0)
-        {
-            return_val=I2C_Write(device_addr,int_addr,int_addr_sz,0,rec_array);
-        }*/
+
 		// Read num_bytes from address
 		// Outer while loop is for each byte
 		while((num_bytes>0)&&(return_value == no_errors))
@@ -97,12 +102,12 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 			do
 			{
 				I2C_clock_delay(Continue);
-				SCL=0;
+				SCL=0; // Pull clock low and transition to new bit
 				num_bits--;
 				SDA = 1;
 				recv_value = recv_value << 1;
 				I2C_clock_delay(Continue);
-				SCL=1;
+				SCL=1; // Pull clock high to sample
 				while(SCL!=1);
 				sent_bit = SDA;
 				recv_value |= sent_bit;
@@ -111,7 +116,7 @@ uint8_t I2C_read(uint8_t device_addr, uint32_t internal_addr, uint8_t int_size, 
 			*(store_data_arr+index) = recv_value;
 			index++;
 			num_bytes--;
-			// Set Ack/Nack
+			// Set Ack/Nack if last byte
 			if(num_bytes == 0)
 			{
 				send_bit=1;
@@ -184,6 +189,7 @@ uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, u
 	uint8_t return_value = no_errors; // return value with error code
 	bit send_bit = 0;
 
+	// Default to 1's before starting writes
 	SDA = 1;
 	SCL = 1;
 	if((SCL==1)&&(SDA==1))
@@ -201,12 +207,12 @@ uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, u
 		do
 		{
 			I2C_clock_delay(Continue);
-			SCL = 0;
+			SCL = 0; // Pull clock low to transition to new bit
 			num_bits--;
 			send_bit = ((send_val>>num_bits)&0x01); // Shift down and mask off the upper 7 bits
 			SDA = send_bit; // Send a single bit
 			I2C_clock_delay(Continue);
-			SCL=1;
+			SCL=1; // Pull clock high to sample
 			while(SCL!=1);
 			sent_bit = SDA;
 
@@ -232,12 +238,12 @@ uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, u
 			do
 			{
 				I2C_clock_delay(Continue);
-				SCL = 0;
+				SCL = 0; // Pull clock low to transition to new bit
 				num_bits--;
 				send_bit = ((send_val>>num_bits)&0x01);
 				SDA = send_bit;
 				I2C_clock_delay(Continue);
-				SCL=1;
+				SCL=1; // Pull clock high to sample bit
 				while(SCL!=1);
 				sent_bit = SDA;
 				//Collision Checking
@@ -263,12 +269,12 @@ uint8_t I2C_write(uint8_t device_addr, uint32_t int_addr, uint8_t int_addr_sz, u
 			do
 			{
 				I2C_clock_delay(Continue);
-				SCL = 0;
+				SCL = 0; // Pull clock low to set new bit
 				num_bits--;
 				send_bit = ((send_val>>num_bits)&0x01);
 				SDA = send_bit;
 				I2C_clock_delay(Continue);
-				SCL=1;
+				SCL=1; // Pull clock high to sample
 				while(SCL!=1);
 
 				// collision detection
